@@ -47,7 +47,7 @@ llm = HuggingFaceEndpoint(
             repo_id="mistralai/Mistral-7B-Instruct-v0.2",
             max_length=128,
             temperature=0.01,
-            # token="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"
+            token="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"
         )
 
 # llm = LlamaCpp(
