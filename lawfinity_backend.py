@@ -9,6 +9,8 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 
+pip install -r requirements.txt
+
 # Import MongoDB connection details from environment variables
 MONGODB_URI = os.getenv("MONGODB_URI")
 DB_NAME = os.getenv("DB_NAME")
