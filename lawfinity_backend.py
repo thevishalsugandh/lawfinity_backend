@@ -1,10 +1,9 @@
 import os
-import requests
 from fastapi import FastAPI
 from pydantic import BaseModel
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import MongoDBAtlasVectorSearch
-from langchain.llms import LlamaCpp
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores import MongoDBAtlasVectorSearch
+from langchain_community.llms import LlamaCpp
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.prompts import PromptTemplate
@@ -31,11 +30,11 @@ vector_search = MongoDBAtlasVectorSearch.from_connection_string(
 )
 
 # Define the Hugging Face model URL and API key from environment variables
-HF_API_KEY = os.getenv("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")
+HF_API_KEY = os.getenv("HF_API_KEY")
 HF_MODEL_URL = "https://api-inference.huggingface.co/models/TheBloke/Mistral-7B-Instruct-v0.1-GGUF"
 
 headers = {
-    "Authorization": f"Bearer {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}",
+    "Authorization": f"Bearer {HF_API_KEY}",
     "Content-Type": "application/json"
 }
 
@@ -59,9 +58,11 @@ PROMPT = PromptTemplate(
    template=prompt_template, input_variables=["context", "question"]
 )
 
+# Assuming `LlamaCpp` requires a local file path, but you're using a Hugging Face model.
+# If LlamaCpp is not appropriate, you might need to use a direct Hugging Face API call
 qa = RetrievalQA.from_chain_type(
     llm=LlamaCpp(
-        model_path=HF_MODEL_URL,
+        model_path=HF_MODEL_URL,  # Check if this usage is correct or if another class is needed
         temperature=0.75,
         max_tokens=2000,
         top_p=0.1,
