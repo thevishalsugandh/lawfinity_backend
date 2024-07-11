@@ -31,7 +31,7 @@ vector_search = MongoDBAtlasVectorSearch.from_connection_string(
 )
 
 # Define the Hugging Face model URL and API key from environment variables
-HF_API_KEY = os.getenv("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")
+HF_API_KEY = os.getenv(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)
 HF_MODEL_URL = "https://api-inference.huggingface.co/models/TheBloke/Mistral-7B-Instruct-v0.1-GGUF"
 
 headers = {
