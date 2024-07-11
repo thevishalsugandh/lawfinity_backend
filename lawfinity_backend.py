@@ -1,20 +1,22 @@
 import os
-import requests
 from fastapi import FastAPI
-from pydantic import BaseModel
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import MongoDBAtlasVectorSearch
-from langchain.llms import LlamaCpp
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores import MongoDBAtlasVectorSearch
+from langchain_community.llms import LlamaCpp
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 
-# Import MongoDB connection details from environment variables
-MONGODB_URI = os.getenv("MONGODB_URI")
-DB_NAME = os.getenv("DB_NAME")
-COLLECTION_NAME = os.getenv("COLLECTION_NAME")
-ATLAS_VECTOR_SEARCH_INDEX_NAME = os.getenv("ATLAS_VECTOR_SEARCH_INDEX_NAME")
+# Hardcoded Hugging Face API key
+HF_API_KEY = "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"
+
+# MongoDB connection details (replace with your actual values)
+MONGODB_URI = "your_mongodb_uri"
+DB_NAME = "your_db_name"
+COLLECTION_NAME = "your_collection_name"
+ATLAS_VECTOR_SEARCH_INDEX_NAME = "your_index_name"
+HF_MODEL_URL = "https://api-inference.huggingface.co/models/TheBloke/Mistral-7B-Instruct-v0.1-GGUF"
 
 # Create FastAPI app
 app = FastAPI()
@@ -30,21 +32,15 @@ vector_search = MongoDBAtlasVectorSearch.from_connection_string(
     index_name=ATLAS_VECTOR_SEARCH_INDEX_NAME
 )
 
-# Define the Hugging Face model URL and API key from environment variables
-HF_API_KEY = os.getenv(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)
-HF_MODEL_URL = "https://api-inference.huggingface.co/models/TheBloke/Mistral-7B-Instruct-v0.1-GGUF"
-
 headers = {
-    "Authorization": f"Bearer {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}",
+    "Authorization": f"Bearer {HF_API_KEY}",
     "Content-Type": "application/json"
 }
 
 # Define the QA chain
 qa_retriever = vector_search.as_retriever(
-   search_type="similarity",
-   search_kwargs={
-       "k": 5
-   }
+    search_type="similarity",
+    search_kwargs={"k": 5}
 )
 
 prompt_template = """
@@ -56,7 +52,7 @@ If you don't know the answer, just say that you don't know, don't try to make up
 Question: {question}
 """
 PROMPT = PromptTemplate(
-   template=prompt_template, input_variables=["context", "question"]
+    template=prompt_template, input_variables=["context", "question"]
 )
 
 qa = RetrievalQA.from_chain_type(
@@ -78,7 +74,14 @@ qa = RetrievalQA.from_chain_type(
     chain_type_kwargs={"prompt": PROMPT}
 )
 
-# Cite sources
+# Define endpoint to get response from language model
+@app.get("/ask")
+async def ask_question(question: str):
+    result = qa({"query": question})
+    response, sources = process_llm_response(result)
+    return {"response": response, "sources": sources}
+
+# Define function to process the response
 def process_llm_response(llm_response):
     print(llm_response['result'])
     print('\n\nSources:')
@@ -87,10 +90,3 @@ def process_llm_response(llm_response):
         print(source.metadata['source'])
         sources.append(source.metadata['source'])
     return llm_response['result'], sources
-
-# Define endpoint to get response from language model
-@app.get("/ask")
-async def ask_question(question: str):
-    result = qa({"query": question})
-    response, sources = process_llm_response(result)
-    return {"response": response, "sources": sources}
