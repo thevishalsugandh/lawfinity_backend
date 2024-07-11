@@ -5,3 +5,4 @@ langchain-community
 transformers
 sentence-transformers
 pymongo
+langchain-huggingface
